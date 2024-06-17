@@ -1,40 +1,48 @@
-import { Image, StyleSheet, Platform, Text, Button, View, Modal, TextInput } from 'react-native';
+import { Image, StyleSheet, Platform, Text, Button, View, Modal, TextInput, ScrollView } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useAsyncStorage } from '@/hooks/useAsyncStorage';
 
 export default function HomeScreen() {
 
 
   const [title, setTitle] = useState("")
-  const [task, setTask] = useState("")
-  const [date, setDate] = useState<Date>(new Date())
-
+  const [description, setDescription] = useState("")
+  const [date, setDate] = useState<any>(new Date())
 
   const [showDatePicker, setShowDatePicker] = useState(false)
 
 
-
-
   const [modalVisible, setModalVisible] = useState(false)
+  const { addItem, storedValue } = useAsyncStorage({})
+
+
+  const [data, setData] = useState([])
+
+  useEffect(() => {
+    console.log(storedValue[0])
+  }, [])
 
   const addTask = () => {
 
     setModalVisible(true)
   }
+  const onChange = (event: any) => {
+    if (event.type === 'set') {
+      const currentDate = new Date(event.nativeEvent.timestamp);
+      setDate(currentDate);
 
-  const onChange = (selectedDate: any) => {
+    }
+  }
 
-console.log(selectedDate)
-    setDate(new Date(selectedDate));
-    console.log(date)
-  };
+  useEffect(() => {
+  }, [])
 
   return (
     <View>
       <Button onPress={addTask} title='add task'></Button>
-
       <Modal
         animationType="slide"
         transparent={false}
@@ -43,10 +51,9 @@ console.log(selectedDate)
           setModalVisible(!modalVisible);
         }}>
         <View style={{ margin: 5 }}>
-          <Text onPress={() => { setModalVisible(false), setShowDatePicker(false) }} >
-            close
-          </Text>
-          <Text>
+          <Button title='close' onPress={() => { setModalVisible(false), setShowDatePicker(false) }} >
+          </Button>
+          <Text style={{ marginTop: 10, fontSize: 40 }}>
             Add Task
           </Text>
 
@@ -62,26 +69,21 @@ console.log(selectedDate)
             value={title}
             placeholder={'title'}
           />
-
           <TextInput
             style={styles.textArea}
             multiline={true}
             numberOfLines={4}
-            onChangeText={(e) => { setTask(e) }}
-            value={task}
+            onChangeText={(e) => { setDescription(e) }}
+            value={description}
             placeholder="Enter a description"
             placeholderTextColor="#999"
           />
-
           {date && <Text style={{ margin: 5 }}>to do for: {date.toLocaleDateString()}</Text>}
 
           <View style={{ marginTop: 10, borderRadius: 5 }}>
             <Button onPress={() => { setShowDatePicker(!showDatePicker) }} title='select date'>
             </Button>
           </View>
-
-
-
           {showDatePicker &&
             <DateTimePicker
               testID="date"
@@ -91,10 +93,40 @@ console.log(selectedDate)
               onChange={onChange}
             />
           }
+          <View style={{ marginTop: 50 }}>
+            <Button onPress={() => { addItem({ title, description, date }) }} title='add task'>
+            </Button>
+          </View>
         </View>
       </Modal>
 
+
+      <ScrollView>
+
+        {storedValue.map((el: any, key: number) => {
+          return <View style={{
+            backgroundColor: "white", padding: 10, margin: 20, marginVertical: 10,
+            marginHorizontal: 20,
+            borderRadius: 10,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.2,
+            shadowRadius: 5,
+            elevation: 3,
+          }} key={key}>
+            <Text  >{JSON.parse(el[1]).title} </Text>
+            <Text  >{JSON.parse(el[1]).description} </Text>
+            <Text  >{JSON.parse(el[1]).date} </Text>
+          </View>
+        })}
+
+
+      </ScrollView>
+
+
     </View>
+
+
 
   );
 }
